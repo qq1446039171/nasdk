@@ -1,0 +1,54 @@
+name: Save Config Settings
+
+on:
+  workflow_dispatch:
+    inputs:
+      settings_base64:
+        description: "Base64-encoded settings.json content"
+        required: true
+      commit_message:
+        description: "Commit message"
+        required: false
+        default: "chore(config): update settings from web"
+
+permissions:
+  contents: write
+
+jobs:
+  save-settings:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Decode and write Config/settings.json
+        shell: bash
+        run: |
+          python - <<'PY'
+          import base64
+          import json
+          import os
+          from pathlib import Path
+
+          b64 = os.environ['INPUT_SETTINGS_BASE64'].strip()
+          raw = base64.b64decode(b64).decode('utf-8')
+          parsed = json.loads(raw)
+          target = Path('Config/settings.json')
+          target.parent.mkdir(parents=True, exist_ok=True)
+          target.write_text(json.dumps(parsed, ensure_ascii=False, indent=2) + "\n", encoding='utf-8')
+          PY
+        env:
+          INPUT_SETTINGS_BASE64: ${{ github.event.inputs.settings_base64 }}
+
+      - name: Commit settings.json
+        shell: bash
+        run: |
+          if git diff --quiet -- Config/settings.json; then
+            echo "No settings changes"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Config/settings.json
+          git commit -m "${{ github.event.inputs.commit_message }}"
+          git push
