@@ -2,7 +2,6 @@
   "name": "tz-nsdk-configurator",
   "private": true,
   "workspaces": [
-    "server",
     "web"
   ],
   "devDependencies": {
@@ -10,12 +9,10 @@
   },
   "scripts": {
     "dev": "concurrently -n web,app -c green,blue \"npm -w web run dev\" \"npm run app:start\"",
-    "dev:server": "npm -w server run dev",
     "dev:web": "npm -w web run dev",
-    "dev:full": "concurrently -n server,web -c blue,green \"npm -w server run dev\" \"npm -w web run dev\"",
     "build": "npm -w web run build",
-    "start": "npm -w server run start",
-    "test": "npm -w server run test && npm -w web run test",
+    "build:pages": "npm -w web run build:pages",
+    "test": "npm -w web run test",
     "app:start": "npm --prefix app/nsdk run start",
     "app:restart": "npm --prefix app/nsdk run restart",
     "app:run-once": "npm --prefix app/nsdk run once",
@@ -23,4 +20,3 @@
     "app:refresh": "npm --prefix app/nsdk run refresh"
   }
 }
-
