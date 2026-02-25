@@ -25,7 +25,7 @@ npm run build:pages
 仓库已提供工作流：`.github/workflows/deploy-pages.yml`
 
 1. 在 GitHub 仓库设置中启用 **Pages**，Source 选择 **GitHub Actions**。
-2. 推送到 `main` 分支后，会自动执行工作流并发布 `web/dist`。
+2. 推送到 `master` 分支后，会自动执行工作流并发布 `web/dist`。
 3. 页面为纯前端，不依赖后端 API。
 
 ## 云端自动运行（Pages + GitHub Actions Cron）
