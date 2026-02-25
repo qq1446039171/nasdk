@@ -1,0 +1,21 @@
+{
+  "name": "tz-nsdk-config-web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "echarts": "^6.0.0",
+    "element-plus": "^2.7.8",
+    "vue": "^3.5.13"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.2.1",
+    "vite": "^6.0.11",
+    "vitest": "^2.1.9"
+  }
+}

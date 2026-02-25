@@ -1,0 +1,73 @@
+{
+  "funds": {
+    "depositAmount": 190000,
+    "nasdaqExposureLimitPercent": 60
+  },
+  "allocation": {
+    "fixedAllocationEnabled": true,
+    "boughtTargetPercent": 40,
+    "reserveCashTargetPercent": 20
+  },
+  "portfolio": {
+    "investedNasdaqCny": 50582,
+    "reserveCashNasdaqCny": 38000,
+    "reserveUsedNasdaqCny": 0,
+    "fearOfMissingOut": false
+  },
+  "drawdown": {
+    "levelsPercent": [
+      -10,
+      -15,
+      -20,
+      -25
+    ]
+  },
+  "snapshot": {
+    "triggerLevelPercent": -10,
+    "baselineReserveAmount": 0,
+    "lockedAt": "",
+    "cycleId": ""
+  },
+  "meta": {
+    "configVersion": 9,
+    "lastSavedAt": "2026-02-02T06:12:49.995Z"
+  },
+  "nsdk": {
+    "fund": {
+      "code": "513100",
+      "secid": "1.513100",
+      "name": "纳指ETF"
+    },
+    "benchmark": {
+      "provider": "stooq",
+      "secid": "1.513100",
+      "symbol": "NDX",
+      "name": "纳指100（NDX）"
+    },
+    "timezone": "Asia/Shanghai",
+    "logDir": "D:/log-nsdk",
+    "pushEnabled": true,
+    "serverChan": {
+      "sendKey": "SCT311262TCOvXh9AgIsoNeaxuvTJYFkxM"
+    },
+    "startupHeartbeatEnabled": true,
+    "otcDcaCnyPerWorkday": 120,
+    "weeklyActiveBuy": {
+      "weekday": "Fri",
+      "hour": "10",
+      "minute": "20",
+      "minCny": 5000,
+      "maxCny": 7000
+    },
+    "dailyChecks": [
+      {
+        "hour": "10",
+        "minute": "30"
+      },
+      {
+        "hour": "14",
+        "minute": "30"
+      }
+    ]
+  }
+}
