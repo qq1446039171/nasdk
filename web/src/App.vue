@@ -35,6 +35,7 @@
           <el-button :disabled="!dirty" @click="resetToLoaded">重置</el-button>
           <el-button type="danger" @click="resetDefaults">恢复默认</el-button>
           <el-button @click="exportJson">导出</el-button>
+          <el-button type="success" :disabled="!settings" @click="openGithubSaveDialog">保存到 GitHub</el-button>
           <el-upload :show-file-list="false" :auto-upload="false" accept="application/json" :on-change="onImportFile">
             <el-button>导入</el-button>
           </el-upload>
@@ -174,6 +175,42 @@
           </div>
         </div>
       </el-card>
+
+      <el-dialog v-model="githubSaveOpen" title="保存到 GitHub 仓库" width="620px" :close-on-click-modal="false">
+        <div class="adjustGrid">
+          <div class="adjustItem">
+            <div class="adjustLabel">Repo Owner</div>
+            <el-input v-model="githubRepoOwner" placeholder="例如: your-name" />
+          </div>
+          <div class="adjustItem">
+            <div class="adjustLabel">Repo Name</div>
+            <el-input v-model="githubRepoName" placeholder="例如: nasdk" />
+          </div>
+          <div class="adjustItem">
+            <div class="adjustLabel">Target Branch</div>
+            <el-input v-model="githubBranch" placeholder="main" />
+          </div>
+          <div class="adjustItem">
+            <div class="adjustLabel">GitHub Personal Access Token</div>
+            <el-input v-model="githubToken" type="password" show-password placeholder="需要 workflow 权限" />
+          </div>
+          <div class="adjustItem" style="grid-column: 1 / -1">
+            <div class="adjustLabel">Commit Message</div>
+            <el-input v-model="githubCommitMessage" placeholder="chore(config): update settings from web" />
+          </div>
+        </div>
+        <el-alert
+          type="info"
+          :closable="false"
+          title="此操作会调用 GitHub Actions workflow_dispatch，把当前 settings.json 写入仓库 Config/settings.json。"
+          show-icon
+          style="margin-top: 10px"
+        />
+        <template #footer>
+          <el-button @click="githubSaveOpen = false">取消</el-button>
+          <el-button type="primary" :loading="githubSaving" :disabled="!canDispatchGithubSave" @click="dispatchGithubSave">提交到仓库</el-button>
+        </template>
+      </el-dialog>
 
       <el-dialog v-model="adjustOpen" title="新增金额" width="520px" :close-on-click-modal="false">
         <div class="adjustGrid">
@@ -334,6 +371,14 @@ const adjustOpen = ref(false);
 const addDepositDelta = ref(0);
 const addNasdaqInvestDelta = ref(0);
 
+const githubSaveOpen = ref(false);
+const githubSaving = ref(false);
+const githubRepoOwner = ref("");
+const githubRepoName = ref("");
+const githubBranch = ref("main");
+const githubToken = ref("");
+const githubCommitMessage = ref("chore(config): update settings from web");
+
 function nowIso() {
   return new Date().toISOString();
 }
@@ -411,6 +456,15 @@ const previewNasdaqInvestedAmount = computed(() => {
 });
 
 const canApplyAdjust = computed(() => (Number(addDepositDelta.value) || 0) > 0 || (Number(addNasdaqInvestDelta.value) || 0) > 0);
+const canDispatchGithubSave = computed(() => {
+  return Boolean(
+    settings.value &&
+    githubRepoOwner.value.trim() &&
+    githubRepoName.value.trim() &&
+    githubBranch.value.trim() &&
+    githubToken.value.trim()
+  );
+});
 
 function openAdjustDialog() {
   addDepositDelta.value = 0;
@@ -561,6 +615,12 @@ watch(settings, () => {
 
 onMounted(() => {
   window.addEventListener("resize", () => myChart?.resize());
+  const state = loadState();
+  const prefs = state.githubPrefs || {};
+  githubRepoOwner.value = prefs.owner || "";
+  githubRepoName.value = prefs.repo || "";
+  githubBranch.value = prefs.branch || "main";
+  githubCommitMessage.value = prefs.commitMessage || "chore(config): update settings from web";
 });
 
 const localValidation = computed(() => {
@@ -812,6 +872,55 @@ async function saveAs() {
   }
 }
 
+function openGithubSaveDialog() {
+  githubSaveOpen.value = true;
+}
+
+function encodeUtf8Base64(text) {
+  return btoa(unescape(encodeURIComponent(text)));
+}
+
+async function dispatchGithubSave() {
+  if (!settings.value || !canDispatchGithubSave.value) return;
+  githubSaving.value = true;
+  try {
+    const payload = {
+      ref: githubBranch.value.trim(),
+      inputs: {
+        settings_base64: encodeUtf8Base64(JSON.stringify(settings.value)),
+        commit_message: githubCommitMessage.value.trim() || "chore(config): update settings from web"
+      }
+    };
+    const url = `https://api.github.com/repos/${githubRepoOwner.value.trim()}/${githubRepoName.value.trim()}/actions/workflows/save-settings.yml/dispatches`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${githubToken.value.trim()}`,
+        "X-GitHub-Api-Version": "2022-11-28",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`GitHub API ${res.status}: ${text || "dispatch_failed"}`);
+    }
+
+    saveMessageType.value = "success";
+    saveMessage.value = "已触发保存到仓库 workflow，请在 GitHub Actions 中查看执行结果。";
+    githubSaveOpen.value = false;
+    await addLog({ action: "githubSaveDispatch", ok: true, reason: "", bytes: JSON.stringify(payload).length });
+  } catch (e) {
+    saveMessageType.value = "error";
+    saveMessage.value = `保存到 GitHub 失败：${e?.message || String(e)}`;
+    await addLog({ action: "githubSaveDispatch", ok: false, reason: saveMessage.value, bytes: 0 });
+  } finally {
+    githubSaving.value = false;
+  }
+}
+
 function resetToLoaded() {
   settings.value = cloneValue(loadedSettings.value);
   saveMessage.value = "";
@@ -890,9 +999,9 @@ const STORAGE_KEY = "tz-nsdk-configurator";
 function loadState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : { versions: [], logs: [] };
+    return raw ? JSON.parse(raw) : { versions: [], logs: [], githubPrefs: {} };
   } catch {
-    return { versions: [], logs: [] };
+    return { versions: [], logs: [], githubPrefs: {} };
   }
 }
 
@@ -968,6 +1077,17 @@ async function rollbackTo(versionId) {
   saveMessage.value = "已回滚到历史版本（点击保存后写入文件）";
   await addLog({ action: "rollback", ok: true, reason: versionId, bytes: 0 });
 }
+
+watch([githubRepoOwner, githubRepoName, githubBranch, githubCommitMessage], () => {
+  const state = loadState();
+  state.githubPrefs = {
+    owner: githubRepoOwner.value,
+    repo: githubRepoName.value,
+    branch: githubBranch.value,
+    commitMessage: githubCommitMessage.value
+  };
+  saveState(state);
+});
 
 watch(versionsOpen, async (open) => {
   if (open) await refreshDrawerData();

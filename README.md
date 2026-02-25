@@ -28,6 +28,21 @@ npm run build:pages
 2. 推送到 `main` 分支后，会自动执行工作流并发布 `web/dist`。
 3. 页面为纯前端，不依赖后端 API。
 
+## 云端自动运行（Pages + GitHub Actions Cron）
+
+为了让 `app/nsdk` 在云端自动执行（而不是依赖本机常驻进程），仓库新增两条工作流：
+
+- `.github/workflows/nsdk-cron.yml`：每 30 分钟执行一次 `npm --prefix app/nsdk run once`
+- `.github/workflows/save-settings.yml`：接收网页触发，把当前配置写回 `Config/settings.json`
+
+### 必做配置
+1. 在仓库 **Settings → Actions → General** 打开 Workflow 权限（允许读写仓库内容）。
+2. 在仓库 **Settings → Secrets and variables → Actions** 新增：
+   - `NSDK_SERVERCHAN_SENDKEY`（可选，建议放这里而不是明文写入 settings）
+3. 在网页中点击“保存到 GitHub”，填写 owner/repo/branch + 具备 `repo` 与 `workflow` 权限的 PAT。
+
+这样就能实现：网页改配置 → 写回仓库 `Config/settings.json` → 下次 cron 推送读取新配置。
+
 ## 使用方式（推荐）
 - 在页面点击「打开文件」，选择 `Config/settings.json`
 - 修改参数后点击「保存」即可覆盖写回该文件
