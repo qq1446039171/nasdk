@@ -613,7 +613,7 @@ watch(settings, () => {
   nextTick(() => updateChart());
 });
 
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener("resize", () => myChart?.resize());
   const state = loadState();
   const prefs = state.githubPrefs || {};
@@ -621,6 +621,7 @@ onMounted(() => {
   githubRepoName.value = prefs.repo || "";
   githubBranch.value = prefs.branch || "main";
   githubCommitMessage.value = prefs.commitMessage || "chore(config): update settings from web";
+  await tryAutoLoadSettings();
 });
 
 const localValidation = computed(() => {
@@ -666,6 +667,49 @@ function loadDefaults() {
   openedGroups.value = (schema.value.groups || []).filter((g) => g && g.hidden !== true).map((g) => g.id);
   settings.value = normalizeBySchema(schema.value, {});
   loadedSettings.value = cloneValue(settings.value);
+}
+
+async function tryAutoLoadSettings() {
+  const candidates = [];
+  const owner = githubRepoOwner.value.trim();
+  const repo = githubRepoName.value.trim();
+  const branch = githubBranch.value.trim() || "main";
+
+  if (owner && repo) {
+    candidates.push({
+      source: "github-raw",
+      name: `Config/settings.json @ ${owner}/${repo}#${branch}`,
+      url: `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/Config/settings.json?ts=${Date.now()}`
+    });
+  }
+
+  candidates.push(
+    { source: "local-static", name: "Config/settings.json（同源静态文件）", url: "./Config/settings.json" },
+    { source: "local-static", name: "Config/settings.json（根路径）", url: "/Config/settings.json" }
+  );
+
+  for (const c of candidates) {
+    try {
+      const res = await fetch(c.url, { cache: "no-store" });
+      if (!res.ok) continue;
+      const text = await res.text();
+      const json = JSON.parse(text);
+      settings.value = normalizeBySchema(schema.value, json);
+      loadedSettings.value = cloneValue(settings.value);
+      fileStatus.value = "loaded";
+      fileName.value = c.name;
+      fileMessageType.value = "success";
+      fileMessage.value = `已自动加载：${c.name}`;
+      await addVersionSnapshot(`autoLoad:${c.source}`);
+      await addLog({ action: "autoLoad", ok: true, reason: c.url, bytes: text.length });
+      return true;
+    } catch {
+      // continue trying next source
+    }
+  }
+
+  await addLog({ action: "autoLoad", ok: false, reason: "no_available_source", bytes: 0 });
+  return false;
 }
 
 async function openFile() {

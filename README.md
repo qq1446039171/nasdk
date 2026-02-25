@@ -44,8 +44,11 @@ npm run build:pages
 这样就能实现：网页改配置 → 写回仓库 `Config/settings.json` → 下次 cron 推送读取新配置。
 
 ## 使用方式（推荐）
-- 在页面点击「打开文件」，选择 `Config/settings.json`
-- 修改参数后点击「保存」即可覆盖写回该文件
+- 页面会自动尝试读取 `Config/settings.json`：
+  - 优先读取你在“保存到 GitHub”里配置的 `owner/repo/branch` 对应仓库文件
+  - 其次尝试同源静态路径 `./Config/settings.json`
+- 若自动读取失败，可点击「打开文件」手动选择 `Config/settings.json`
+- 修改参数后点击「保存」可写回本地授权文件；点击「保存到 GitHub」可写回仓库
 - 若浏览器不支持文件系统 API，可使用「导出/导入」
 
 ## 功能说明
