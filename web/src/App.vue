@@ -115,9 +115,9 @@
 
           <div class="stateBlock">
             <div class="stateBlockTitle">最近行情（lastMarket）</div>
-            <div class="stateLine">code：{{ nsdkState.lastMarket?.code ?? "-" }} · {{ nsdkState.lastMarket?.name ?? "-" }}</div>
-            <div class="stateLine">price：{{ nsdkState.lastMarket?.price ?? "-" }} · pct：{{ nsdkState.lastMarket?.pct ?? "-" }}</div>
-            <div class="stateLine">drawdownPct：{{ nsdkState.lastMarket?.drawdownPct ?? "-" }} · at：{{ nsdkState.lastMarket?.at ?? "-" }}</div>
+            <div class="stateLine">code：{{ nsdkState.lastMarket?.benchmark?.code ?? "-" }} · {{ nsdkState.lastMarket?.benchmark?.name ?? "-" }}</div>
+            <div class="stateLine">price：{{ nsdkState.lastMarket?.benchmark?.price ?? "-" }} · pct：{{ nsdkState.lastMarket?.benchmark?.pct ?? "-" }}</div>
+            <div class="stateLine">drawdownPct：{{ nsdkState.lastMarket?.benchmark?.drawdownPct ?? "-" }} · at：{{ nsdkState.lastMarket?.at ?? "-" }}</div>
           </div>
         </div>
 
@@ -168,6 +168,9 @@
           <div class="chart-container" ref="chartRef"></div>
           <div class="stats-container">
             <el-statistic title="当前存款总金额" :value="depositAmount" :precision="2" prefix="¥" />
+            <div v-if="hasLatestMarket" class="marketLine">
+              推送标的：{{ latestBenchmarkName }} ｜ 当前价格：{{ latestBenchmarkPriceText }} ｜ 回撤幅度：-{{ latestDrawdownText }}%
+            </div>
             <div class="stat-row">
               <el-statistic title="纳指已投资金额" :value="nasdaqInvestedAmount" :precision="2" prefix="¥">
                 <template #suffix>
@@ -300,6 +303,29 @@
           </div>
         </el-collapse-item>
       </el-collapse>
+
+      <el-card v-if="showExecutedLevelsCard" shadow="never" style="margin-top: 12px; margin-bottom: 12px">
+        <template #header>
+          <div class="cardHeader">
+            <div class="cardTitle">回撤档位执行状态（Config/settings.json）</div>
+            <div class="meta">
+              <span>仅在触发回撤档位后显示，用于控制 levelsPercent 各档位是否已执行</span>
+            </div>
+          </div>
+        </template>
+
+        <el-table :data="settingsDrawdownRows" style="width: 100%" size="small">
+          <el-table-column prop="tier" label="档位" width="100">
+            <template #default="{ row }">-{{ row.tier }}%</template>
+          </el-table-column>
+          <el-table-column prop="executed" label="已执行" width="140">
+            <template #default="{ row }">
+              <el-switch :model-value="row.executed" @update:model-value="(v) => setTierExecuted(row.tier, v)" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
 
       <el-drawer v-model="versionsOpen" title="版本 / 对比 / 操作日志" size="60%">
         <div class="drawerSection">
@@ -460,6 +486,18 @@ function fmtPercent(value) {
   if (!Number.isFinite(n)) return "0";
   return String(Math.round(n * 100) / 100);
 }
+
+const latestBenchmark = computed(() => nsdkState.value?.lastMarket?.benchmark || null);
+const hasLatestMarket = computed(() => Boolean(latestBenchmark.value));
+const latestBenchmarkName = computed(() => latestBenchmark.value?.name || latestBenchmark.value?.code || "-");
+const latestBenchmarkPriceText = computed(() => {
+  const n = Number(latestBenchmark.value?.price);
+  return Number.isFinite(n) ? fmtMoney(n) : "-";
+});
+const latestDrawdownText = computed(() => {
+  const n = Number(latestBenchmark.value?.drawdownPct);
+  return Number.isFinite(n) ? fmtPercent(n) : "-";
+});
 
 const depositAmount = computed(() => Number(settings.value?.funds?.depositAmount) || 0);
 const nasdaqInvestedAmount = computed(() => Number(settings.value?.portfolio?.investedNasdaqCny) || 0);
@@ -674,6 +712,11 @@ const canSaveState = computed(() => nsdkStateDirty.value && stateLocalValidation
 const visibleGroups = computed(() => {
   const groups = schema.value?.groups || [];
   return groups.filter((g) => g && g.hidden !== true);
+});
+
+const showExecutedLevelsCard = computed(() => {
+  if (!settings.value) return false;
+  return Boolean(nsdkState.value?.drawdownRound);
 });
 
 const stateFileStatusLabel = computed(() => {
@@ -1291,6 +1334,15 @@ loadDefaults();
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 20px;
+}
+.marketLine {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
 }
 .stat-row {
   display: flex;
