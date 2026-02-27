@@ -32,7 +32,9 @@ npm run build:pages
 
 为了让 `app/nsdk` 在云端自动执行（而不是依赖本机常驻进程），仓库新增两条工作流：
 
-- `.github/workflows/nsdk-cron.yml`：每 30 分钟执行一次 `npm --prefix app/nsdk run once`
+- `.github/workflows/nsdk-cron.yml`：
+  - 每 5 分钟运行 `realtime`（仅档位触发时推送，保证回撤档位尽快提醒）
+  - 工作日 10:30 / 14:30（北京时间）运行 `market`（例行状态推送）
 - `.github/workflows/save-settings.yml`：接收网页触发，把当前配置写回 `Config/settings.json`
 
 ### 必做配置
