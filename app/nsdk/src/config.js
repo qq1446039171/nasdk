@@ -20,6 +20,14 @@ const normalizeLevels = (levels) => {
   return uniq.length ? uniq : null;
 };
 
+const normalizeExecutedLevels = (executedLevels, levels) => {
+  const normalized = {};
+  for (const level of levels) {
+    normalized[String(level)] = Boolean(executedLevels?.[String(level)]);
+  }
+  return normalized;
+};
+
 const readJsonIfExists = (filePath) => {
   if (!fs.existsSync(filePath)) return null;
   const raw = fs.readFileSync(filePath, 'utf8');
@@ -79,6 +87,7 @@ const buildConfigFromSettings = (settings) => {
   }
 
   const drawdownLevels = normalizeLevels(settings?.drawdown?.levelsPercent) || [10, 15, 20, 25];
+  const drawdownExecutedLevels = normalizeExecutedLevels(settings?.drawdown?.executedLevels, drawdownLevels);
 
   const cfg = {
     fund: nsdk.fund,
@@ -96,6 +105,7 @@ const buildConfigFromSettings = (settings) => {
     activeMaxInvestRatio: boughtTargetPercent / 100,
     reserveRatio: reserveTargetPercent / 100,
     drawdownLevels,
+    drawdownExecutedLevels,
     portfolio: {
       investedNasdaqCny: Math.round(clampNumber(settings?.portfolio?.investedNasdaqCny, 0)),
       reserveCashNasdaqCny: Math.round(reserveCashNasdaqCny),
