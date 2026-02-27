@@ -54,6 +54,28 @@
 
       </el-card>
 
+      <el-card v-if="settings" shadow="never" style="margin-bottom: 12px">
+        <template #header>
+          <div class="cardHeader">
+            <div class="cardTitle">回撤档位执行状态（Config/settings.json）</div>
+            <div class="meta">
+              <span>用于控制 levelsPercent 各档位是否已执行</span>
+            </div>
+          </div>
+        </template>
+
+        <el-table :data="settingsDrawdownRows" style="width: 100%" size="small">
+          <el-table-column prop="tier" label="档位" width="100">
+            <template #default="{ row }">-{{ row.tier }}%</template>
+          </el-table-column>
+          <el-table-column prop="executed" label="已执行" width="140">
+            <template #default="{ row }">
+              <el-switch :model-value="row.executed" @update:model-value="(v) => setTierExecuted(row.tier, v)" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
       <el-card v-if="schema" shadow="never" style="margin-bottom: 12px">
         <template #header>
           <div class="cardHeader">
