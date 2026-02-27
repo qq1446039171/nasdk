@@ -20,7 +20,8 @@
       -15,
       -20,
       -25
-    ]
+    ],
+    "executedLevels": {}
   },
   "snapshot": {
     "triggerLevelPercent": -10,

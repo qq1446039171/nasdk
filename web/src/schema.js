@@ -120,6 +120,15 @@ export const schema = {
           validation: { required: true }
         },
         {
+          key: "drawdown.executedLevels",
+          nameZh: "已执行档位映射",
+          nameEn: "Executed Levels Map",
+          description: "各回撤档位是否已执行，键为档位(例如 10/15/20/25)，值为 true/false。",
+          type: "object",
+          default: {},
+          validation: { required: true }
+        },
+        {
           key: "snapshot.triggerLevelPercent",
           nameZh: "快照触发档位(%)",
           nameEn: "Snapshot Trigger Level (%)",

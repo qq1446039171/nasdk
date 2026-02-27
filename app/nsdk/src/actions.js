@@ -8,7 +8,7 @@
  *
  * 注意：
  * - 本程序只负责“提醒 + 记录 + 防重复”，不直接下单
- * - 你执行完买入后，用 cli 命令确认（把 executed 标记写入 state.json），保证“每档只触发一次”
+ * - 你执行完买入后，用配置器或 cli 命令确认（把 executed 标记写入 Config/settings.json），保证“每档只触发一次”
  */
 const { getLatestPrice, getFiveMonthHigh } = require('./market/eastmoney');
 const { getLatestDaily, getFiveMonthHighDaily } = require('./market/stooq');
@@ -90,6 +90,15 @@ const buildTierFlags = (levels) => {
   return flags;
 };
 
+const mergeExecutedFlags = (levels, executedInSettings, executedInRound) => {
+  const merged = {};
+  for (const level of levels) {
+    const key = String(level);
+    merged[key] = Boolean(executedInSettings?.[key] || executedInRound?.[key]);
+  }
+  return merged;
+};
+
 const getRoundLevels = (round) => {
   if (!round || !Array.isArray(round.table)) return [];
   const levels = round.table.map((row) => Number(row?.level)).filter((v) => Number.isFinite(v));
@@ -143,7 +152,7 @@ const pushTierAlert = async (cfg, state, benchmark, buy, tier) => {
     `本轮回撤快照储备金：${fmtCny(state.drawdownRound.snapshotReserveCny)} 元`,
     `本档买入金额：${fmtCny(row?.amountCny)} 元`,
     `规则：每档只触发一次；不回补、不重复、不预判`,
-    `确认执行后：在配置器里打开 app/nsdk/state.json，将档位 ${tier} 标记为已执行`
+    `确认执行后：在配置器里将 Config/settings.json 的 drawdown.executedLevels.${tier} 标记为 true`
   ].join('\n\n');
 
   const pushRet = await push(cfg, { title, body });
@@ -197,9 +206,17 @@ const ensureDrawdownRound = (cfg, state, drawdownPct, levels) => {
       snapshotReserveCny: reserveNow,
       table,
       alerted: buildTierFlags(thresholds),
-      executed: buildTierFlags(thresholds),
+      executed: mergeExecutedFlags(thresholds, cfg.drawdownExecutedLevels, null),
     };
     logEvent({ type: 'drawdown_round_start', snapshotReserveCny: reserveNow, table });
+  }
+
+  if (state.drawdownRound) {
+    state.drawdownRound.executed = mergeExecutedFlags(
+      thresholds,
+      cfg.drawdownExecutedLevels,
+      state.drawdownRound.executed
+    );
   }
 };
 
