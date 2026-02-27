@@ -30,17 +30,18 @@
 
         <div class="actions">
           <el-button @click="openFile">打开文件</el-button>
+          <!-- <el-button @click="openFile">打开文件</el-button>
           <el-button type="primary" :disabled="!canSave" @click="saveToFile">保存</el-button>
           <el-button :disabled="!settings" @click="saveAs">另存为</el-button>
           <el-button :disabled="!dirty" @click="resetToLoaded">重置</el-button>
           <el-button type="danger" @click="resetDefaults">恢复默认</el-button>
-          <el-button @click="exportJson">导出</el-button>
+          <el-button @click="exportJson">导出</el-button> -->
           <el-button type="success" :disabled="!settings" @click="openGithubSaveDialog">保存到 GitHub</el-button>
-          <el-upload :show-file-list="false" :auto-upload="false" accept="application/json" :on-change="onImportFile">
+          <!-- <el-upload :show-file-list="false" :auto-upload="false" accept="application/json" :on-change="onImportFile">
             <el-button>导入</el-button>
-          </el-upload>
-          <el-button @click="openVersions">版本/对比</el-button>
-          <el-button @click="clearSnapshot">清空快照</el-button>
+          </el-upload> -->
+          <!-- <el-button @click="openVersions">版本/对比</el-button>
+          <el-button @click="clearSnapshot">清空快照</el-button> -->
         </div>
 
         <el-alert
@@ -77,33 +78,7 @@
       </el-card>
 
       <el-card v-if="schema" shadow="never" style="margin-bottom: 12px">
-        <template #header>
-          <div class="cardHeader">
-            <div class="cardTitle">运行时状态（state.json）</div>
-            <div class="meta">
-              <span>文件：{{ stateFileName || "-" }}</span>
-              <span>状态：{{ stateFileStatusLabel }}</span>
-              <span v-if="nsdkStateDirty">未保存</span>
-              <span v-if="!stateLocalValidation.ok">存在校验错误</span>
-            </div>
-          </div>
-        </template>
-
-        <div class="actions">
-          <el-button @click="openStateFile">打开 state.json</el-button>
-          <el-button type="primary" :disabled="!canSaveState" @click="saveStateToFile">保存 state.json</el-button>
-          <el-button :disabled="!nsdkState" @click="saveStateAs">另存为</el-button>
-          <el-button :disabled="!nsdkStateDirty" @click="resetStateToLoaded">重置</el-button>
-        </div>
-
-        <el-alert
-          v-if="stateMessage"
-          :type="stateMessageType"
-          :closable="false"
-          :title="stateMessage"
-          show-icon
-          style="margin-top: 12px"
-        />
+      
 
         <div v-if="nsdkState" class="stateGrid">
           <div class="stateBlock">
