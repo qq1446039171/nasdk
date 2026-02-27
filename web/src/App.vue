@@ -54,6 +54,28 @@
 
       </el-card>
 
+      <el-card v-if="settings" shadow="never" style="margin-bottom: 12px">
+        <template #header>
+          <div class="cardHeader">
+            <div class="cardTitle">回撤档位执行状态（Config/settings.json）</div>
+            <div class="meta">
+              <span>用于控制 levelsPercent 各档位是否已执行</span>
+            </div>
+          </div>
+        </template>
+
+        <el-table :data="settingsDrawdownRows" style="width: 100%" size="small">
+          <el-table-column prop="tier" label="档位" width="100">
+            <template #default="{ row }">-{{ row.tier }}%</template>
+          </el-table-column>
+          <el-table-column prop="executed" label="已执行" width="140">
+            <template #default="{ row }">
+              <el-switch :model-value="row.executed" @update:model-value="(v) => setTierExecuted(row.tier, v)" />
+            </template>
+          </el-table-column>
+        </el-table>
+      </el-card>
+
       <el-card v-if="schema" shadow="never" style="margin-bottom: 12px">
         <template #header>
           <div class="cardHeader">
@@ -332,7 +354,7 @@ import { ElMessageBox } from "element-plus";
 import * as echarts from "echarts";
 
 import { normalizeBySchema, validateLocal } from "./schemaUtils";
-import { normalizeNsdkState, validateNsdkStateLocal, TIERS } from "./nsdkStateUtils";
+import { normalizeNsdkState, validateNsdkStateLocal } from "./nsdkStateUtils";
 import NumberArrayInput from "./components/NumberArrayInput.vue";
 import JsonEditor from "./components/JsonEditor.vue";
 import { schema as embeddedSchema } from "./schema";
@@ -825,26 +847,56 @@ function resetStateToLoaded() {
   stateMessage.value = "";
 }
 
+function getDrawdownLevelsFromSettings() {
+  const raw = settings.value?.drawdown?.levelsPercent;
+  if (!Array.isArray(raw)) return [10, 15, 20, 25];
+  const levels = raw
+    .map((v) => Number(v))
+    .filter((v) => Number.isFinite(v))
+    .map((v) => Math.abs(v))
+    .filter((v) => v > 0);
+  const uniq = Array.from(new Set(levels)).sort((a, b) => a - b);
+  return uniq.length ? uniq : [10, 15, 20, 25];
+}
+
+function getExecutedLevelsFromSettings() {
+  const levels = getDrawdownLevelsFromSettings();
+  const src = settings.value?.drawdown?.executedLevels || {};
+  const map = {};
+  for (const level of levels) {
+    map[String(level)] = Boolean(src[String(level)]);
+  }
+  return map;
+}
+
+const settingsDrawdownRows = computed(() => {
+  const executedMap = getExecutedLevelsFromSettings();
+  return getDrawdownLevelsFromSettings().map((tier) => ({
+    tier: String(tier),
+    executed: Boolean(executedMap[String(tier)])
+  }));
+});
+
 const drawdownTierRows = computed(() => {
   const round = nsdkState.value?.drawdownRound;
   if (!round) return [];
+  const executedMap = getExecutedLevelsFromSettings();
   const table = Array.isArray(round.table) ? round.table : [];
-  return TIERS.map((tier) => {
+  return getDrawdownLevelsFromSettings().map((tier) => {
     const row = table.find((x) => String(x?.level) === String(tier));
     return {
       tier: String(tier),
       amountCny: row?.amountCny ?? null,
-      alerted: Boolean(round.alerted?.[tier]),
-      executed: Boolean(round.executed?.[tier])
+      alerted: Boolean(round.alerted?.[String(tier)]),
+      executed: Boolean(executedMap[String(tier)])
     };
   });
 });
 
 function setTierExecuted(tier, value) {
-  const round = nsdkState.value?.drawdownRound;
-  if (!round) return;
-  if (!round.executed) round.executed = {};
-  round.executed[String(tier)] = Boolean(value);
+  const next = { ...(settings.value?.drawdown?.executedLevels || {}) };
+  next[String(tier)] = Boolean(value);
+  deepSet(settings.value, "drawdown.executedLevels", next);
 }
 
 async function writeToHandle(handle, jsonText) {

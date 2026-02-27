@@ -51,6 +51,7 @@ npm run build:pages
   - 其次尝试同源静态路径 `./Config/settings.json`
 - 若自动读取失败，可点击「打开文件」手动选择 `Config/settings.json`
 - 修改参数后点击「保存」可写回本地授权文件；点击「保存到 GitHub」可写回仓库
+- 回撤档位执行状态可在页面「回撤档位执行状态（Config/settings.json）」卡片中直接切换，对应字段 `drawdown.executedLevels`
 - 若浏览器不支持文件系统 API，可使用「导出/导入」
 
 ## 功能说明

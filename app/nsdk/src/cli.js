@@ -3,7 +3,7 @@
  *
  * 为什么需要 cli：
  * - 程序不会也不应该替你下单
- * - 但纪律要求“每档只触发一次”，所以必须有一个“人工确认入口”把 executed 写入 state.json
+ * - 但纪律要求“每档只触发一次”，所以必须有一个“人工确认入口”把 executed 写入 Config/settings.json
  *
  * 常用：
  * - status：查看当前配置/状态/回撤轮
@@ -13,7 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 const { loadConfig } = require('./config');
-const { loadState, saveState } = require('./state');
+const { loadState } = require('./state');
 const { logEvent } = require('./logger');
 const { computeTargets } = require('./plan');
 
@@ -70,18 +70,25 @@ const cmdSet = (args) => {
   console.log('OK');
 };
 
-// 人工确认入口：把“已执行”写入持久化状态，防止重复触发
+// 人工确认入口：把“已执行”写入 Config/settings.json，防止重复触发
 const cmdExec = (args) => {
   const state = loadState();
 
   const kind = args[0];
   if (kind === 'tier') {
     const tier = String(args[1] || '');
-    if (!state.drawdownRound) throw new Error('No active drawdown round');
-    if (!state.drawdownRound.executed?.hasOwnProperty(tier)) throw new Error('Invalid tier');
-    state.drawdownRound.executed[tier] = true;
-    logEvent({ type: 'tier_executed', tier, amountCny: state.drawdownRound.table?.find(x => String(x.level) === tier)?.amountCny || null });
-    saveState(state);
+    const cfg = loadConfig();
+    const allowed = new Set((cfg.drawdownLevels || []).map((v) => String(v)));
+    if (!allowed.has(tier)) throw new Error('Invalid tier');
+
+    const { path: settingsPath, json: settings } = loadSettings();
+    settings.drawdown = settings.drawdown || {};
+    settings.drawdown.executedLevels = settings.drawdown.executedLevels || {};
+    settings.drawdown.executedLevels[tier] = true;
+    saveSettings(settingsPath, settings);
+
+    const amountCny = state.drawdownRound?.table?.find((x) => String(x.level) === tier)?.amountCny || null;
+    logEvent({ type: 'tier_executed', tier, amountCny });
     console.log('OK');
     return;
   }
