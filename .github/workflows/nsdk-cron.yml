@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "Run mode: market | realtime | weekly"
+        description: "Run mode: market | realtime | weekly | once"
         required: false
         default: "market"
       persist_state:
