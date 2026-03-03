@@ -273,7 +273,7 @@ const marketCheck = async (cfg, state) => {
   state.lastMarket = { ...market, at: new Date().toISOString() };
   logEvent({ type: 'market_check', market: state.lastMarket });
 
-  if (drawdownPct === null) return;
+  if (drawdownPct === null) return false;
 
   const levels = getDrawdownLevels(cfg);
   ensureDrawdownRound(cfg, state, drawdownPct, levels);
@@ -281,7 +281,7 @@ const marketCheck = async (cfg, state) => {
   const t = nextTierToTrigger(drawdownPct, state.drawdownRound);
   if (t && state.drawdownRound) {
     await pushTierAlert(cfg, state, benchmark, buy, t);
-    return;
+    return true;
   }
 
   // 未触发档位时，推送例行状态（帮助你“只盯规则，不盯盘”）
@@ -303,6 +303,7 @@ const marketCheck = async (cfg, state) => {
   ].join('\n\n');
   const pushRet = await push(cfg, { title, body });
   logEvent({ type: 'market_report_push', pushRet, drawdownPct });
+  return true;
 };
 
 // 每周一次主动建仓提醒（阶段一：只到 40%），并自动遵守“冻结/回撤优先”纪律

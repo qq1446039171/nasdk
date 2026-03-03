@@ -34,9 +34,12 @@ const maybeRunDailyMarketCheck = async (cfg, state) => {
   for (const t of cfg.dailyChecks || []) {
     if (!isWithinWindow(parts, t, 15)) continue;
     const key = runKeyForTarget(parts, 'market', t);
-    if (!shouldRunOnce(state, key)) continue;
-    await marketCheck(cfg, state);
-    return true;
+    if (state.lastRunKeys[key]) continue;
+    const pushed = await marketCheck(cfg, state);
+    if (pushed) {
+      state.lastRunKeys[key] = new Date().toISOString();
+      return true;
+    }
   }
   return false;
 };
