@@ -119,10 +119,26 @@ const findNextLevel = (round) => {
 };
 
 const getMarketSnapshot = async (cfg) => {
-  const [buyLatest, benchmarkMarket] = await Promise.all([
-    getLatestPrice(cfg.fund.secid),
-    fetchBenchmarkMarket(cfg),
-  ]);
+  let buyLatest = null;
+  let benchmarkMarket = null;
+  const errors = [];
+
+  try {
+    buyLatest = await getLatestPrice(cfg.fund.secid);
+  } catch (err) {
+    errors.push(String(err?.message || err));
+  }
+
+  try {
+    benchmarkMarket = await fetchBenchmarkMarket(cfg);
+  } catch (err) {
+    errors.push(String(err?.message || err));
+  }
+
+  if (!benchmarkMarket) {
+    const msg = errors.length ? errors.join('; ') : 'benchmark_missing';
+    throw new Error(msg);
+  }
 
   const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high5m });
   const buy = {

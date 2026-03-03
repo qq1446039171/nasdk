@@ -54,7 +54,11 @@ const main = async () => {
   } else if (mode === 'weekly') {
     await weeklyActiveReminder(cfg, state);
   } else if (mode === 'realtime') {
-    await tryRealtimeDrawdownAlert(cfg, state);
+    try {
+      await tryRealtimeDrawdownAlert(cfg, state);
+    } catch (err) {
+      console.error('[realtime] drawdown alert failed:', err);
+    }
     await maybeRunDailyMarketCheck(cfg, state);
   } else {
     const pushed = await maybeRunDailyMarketCheck(cfg, state);
