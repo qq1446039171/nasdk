@@ -268,10 +268,26 @@ const marketCheck = async (cfg, state) => {
 
   const reserveUsedPercentOfTarget = targets.reserveTarget > 0 ? (reserveUsed / targets.reserveTarget) * 100 : null;
 
-  const [buyLatest, benchmarkMarket] = await Promise.all([
-    getLatestPrice(cfg.fund.secid),
-    fetchBenchmarkMarket(cfg),
-  ]);
+  let buyLatest = null;
+  let benchmarkMarket = null;
+  const errors = [];
+
+  try {
+    buyLatest = await getLatestPrice(cfg.fund.secid);
+  } catch (err) {
+    errors.push(String(err?.message || err));
+  }
+
+  try {
+    benchmarkMarket = await fetchBenchmarkMarket(cfg);
+  } catch (err) {
+    errors.push(String(err?.message || err));
+  }
+
+  if (!benchmarkMarket) {
+    logEvent({ type: 'market_check_failed', errors });
+    return false;
+  }
 
   const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high5m });
   const buy = {
