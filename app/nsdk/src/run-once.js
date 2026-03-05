@@ -23,8 +23,7 @@ const isWithinWindow = (parts, t, windowMinutes) => {
   if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(th) || !Number.isFinite(tm)) return false;
   const current = h * 60 + m;
   const target = th * 60 + tm;
-  if (current < target) return false;
-  return current - target <= windowMinutes;
+  return Math.abs(current - target) <= windowMinutes;
 };
 
 const maybeRunDailyMarketCheck = async (cfg, state) => {
@@ -32,7 +31,7 @@ const maybeRunDailyMarketCheck = async (cfg, state) => {
   if (!isWeekday(parts.weekday)) return false;
 
   for (const t of cfg.dailyChecks || []) {
-    if (!isWithinWindow(parts, t, 15)) continue;
+    if (!isWithinWindow(parts, t, 30)) continue;
     const key = runKeyForTarget(parts, 'market', t);
     if (state.lastRunKeys[key]) continue;
     const pushed = await marketCheck(cfg, state);
