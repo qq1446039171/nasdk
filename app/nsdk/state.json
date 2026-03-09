@@ -57,19 +57,19 @@
       "provider": "stooq",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 24657.586,
-      "pct": 0.05914861861436948,
+      "price": 24849.893,
+      "pct": 0.8395200099338581,
       "high5m": 26182.1,
       "high5mDay": "2025-10-29",
-      "drawdownPct": 5.82
+      "drawdownPct": 5.09
     },
     "buy": {
       "code": "513100",
       "name": "纳指ETF",
-      "price": 1.756,
-      "pct": -2.5
+      "price": null,
+      "pct": null
     },
-    "at": "2026-03-09T18:40:28.825Z"
+    "at": "2026-03-09T19:26:58.209Z"
   },
   "freeze": {
     "active": false,
