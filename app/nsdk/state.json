@@ -79,8 +79,8 @@
       "provider": "stooq",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 23898.154,
-      "pct": -1.8769071839863891,
+      "price": 23898.15,
+      "pct": -1.8769236075298554,
       "high5m": 26182.1,
       "high5mDay": "2025-10-29",
       "drawdownPct": 8.72
@@ -91,7 +91,7 @@
       "price": null,
       "pct": null
     },
-    "at": "2026-03-20T23:03:51.289Z"
+    "at": "2026-03-20T23:38:12.563Z"
   },
   "freeze": {
     "active": false,
