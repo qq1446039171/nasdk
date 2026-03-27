@@ -85,25 +85,62 @@
     "market:2026-03-27:14:00": "2026-03-27T05:55:36.000Z",
     "market:2026-03-27:17:00": "2026-03-27T08:31:28.785Z"
   },
-  "drawdownRound": null,
+  "drawdownRound": {
+    "startedAt": "2026-03-27T13:50:27.056Z",
+    "snapshotReserveCny": 40000,
+    "table": [
+      {
+        "level": 10,
+        "ratio": 0.2,
+        "amountCny": 8000
+      },
+      {
+        "level": 15,
+        "ratio": 0.3,
+        "amountCny": 12000
+      },
+      {
+        "level": 20,
+        "ratio": 0.3,
+        "amountCny": 12000
+      },
+      {
+        "level": 25,
+        "ratio": 0.2,
+        "amountCny": 8000
+      }
+    ],
+    "alerted": {
+      "10": true,
+      "15": false,
+      "20": false,
+      "25": false
+    },
+    "executed": {
+      "10": false,
+      "15": false,
+      "20": false,
+      "25": false
+    }
+  },
   "lastMarket": {
     "benchmark": {
       "provider": "stooq",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 23587,
-      "pct": -2.3837291592344965,
+      "price": 23436.895,
+      "pct": -0.636388688684443,
       "high5m": 26182.1,
       "high5mDay": "2025-10-29",
-      "drawdownPct": 9.91
+      "drawdownPct": 10.49
     },
     "buy": {
       "code": "513100",
-      "name": "纳指ETF",
-      "price": null,
-      "pct": null
+      "name": "纳指ETF国泰",
+      "price": 1.708,
+      "pct": -0.47
     },
-    "at": "2026-03-27T12:31:19.302Z"
+    "at": "2026-03-27T13:50:27.055Z"
   },
   "freeze": {
     "active": false,
