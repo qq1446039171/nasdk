@@ -9,7 +9,7 @@
     "reserveCashTargetPercent": 20
   },
   "portfolio": {
-    "investedNasdaqCny": 57149,
+    "investedNasdaqCny": 58149,
     "reserveCashNasdaqCny": 40000,
     "reserveUsedNasdaqCny": 0,
     "fearOfMissingOut": false
