@@ -46,7 +46,7 @@
       "name": "纳指100（NDX）"
     },
     "finnhub": {
-      "apiKey": ""
+      "apiKey": "d7953thr01qp0fl778n0d7953thr01qp0fl778ng"
     },
     "timezone": "Asia/Shanghai",
     "logDir": "D:/log-nsdk",
