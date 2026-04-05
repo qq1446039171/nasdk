@@ -84,3 +84,8 @@ npm run app:run-once
 
 更纯粹重启（不额外 run-once）：
 - `npm run app:restart`
+
+
+npm run app:run-once -- once  单次手动执行推送
+ Get-Content D:\log-nsdk\execution.log -Tail 80  查看执行日志
+<!-- eastmoney -->

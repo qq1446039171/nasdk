@@ -159,14 +159,16 @@ export function validateLocal(schema, settings) {
   }
 
   const benchmarkProvider = deepGet(settings, "nsdk.benchmark.provider") || "eastmoney";
-  if (benchmarkProvider !== "eastmoney" && benchmarkProvider !== "stooq") {
-    addErr("nsdk.benchmark.provider", "必须是 eastmoney 或 stooq");
+  if (benchmarkProvider !== "eastmoney" && benchmarkProvider !== "stooq" && benchmarkProvider !== "finnhub") {
+    addErr("nsdk.benchmark.provider", "必须是 eastmoney、stooq 或 finnhub");
   } else if (benchmarkProvider === "eastmoney") {
     const secid = deepGet(settings, "nsdk.benchmark.secid");
     if (!secid || typeof secid !== "string" || !secid.trim()) addErr("nsdk.benchmark.secid", "provider=eastmoney 时必填");
-  } else if (benchmarkProvider === "stooq") {
+  } else if (benchmarkProvider === "stooq" || benchmarkProvider === "finnhub") {
     const symbol = deepGet(settings, "nsdk.benchmark.symbol");
-    if (!symbol || typeof symbol !== "string" || !symbol.trim()) addErr("nsdk.benchmark.symbol", "provider=stooq 时必填");
+    if (!symbol || typeof symbol !== "string" || !symbol.trim()) {
+      addErr("nsdk.benchmark.symbol", `provider=${benchmarkProvider} 时必填`);
+    }
   }
 
   return { ok: Object.keys(fieldErrors).length === 0, fieldErrors };

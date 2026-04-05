@@ -71,13 +71,13 @@ const buildConfigFromSettings = (settings) => {
   const benchmark = {
     provider: benchmarkProvider,
     secid: benchmarkProvider === 'eastmoney' ? (rawBenchmark?.secid || nsdk?.fund?.secid) : (rawBenchmark?.secid || null),
-    symbol: benchmarkProvider === 'stooq' ? (rawBenchmark?.symbol || null) : (rawBenchmark?.symbol || null),
+    symbol: rawBenchmark?.symbol || null,
     name: rawBenchmark?.name || null,
   };
   if (benchmark.provider === 'eastmoney' && !benchmark.name) {
     benchmark.name = nsdk?.fund?.name ? `${nsdk.fund.name}（净值）` : null;
   }
-  if (benchmark.provider === 'stooq' && !benchmark.name) {
+  if ((benchmark.provider === 'stooq' || benchmark.provider === 'finnhub') && !benchmark.name) {
     const s = String(benchmark.symbol || '').trim().toUpperCase();
     if (s === 'QQQ' || s === 'QQQ.US') benchmark.name = 'QQQ';
     else if (s === 'IXIC' || s === '^IXIC' || s === '^NDQ') benchmark.name = '纳指指数（IXIC）';
@@ -89,9 +89,12 @@ const buildConfigFromSettings = (settings) => {
   const drawdownLevels = normalizeLevels(settings?.drawdown?.levelsPercent) || [10, 15, 20, 25];
   const drawdownExecutedLevels = normalizeExecutedLevels(settings?.drawdown?.executedLevels, drawdownLevels);
 
+  const finnhubApiKey = String(process.env.FINNHUB_API_KEY || nsdk.finnhub?.apiKey || '').trim();
+
   const cfg = {
     fund: nsdk.fund,
     benchmark,
+    finnhubApiKey,
     timezone: nsdk.timezone,
     logDir: nsdk.logDir,
     pushEnabled: nsdk.pushEnabled !== false,
@@ -127,7 +130,12 @@ const loadConfig = () => {
   if (!cfg?.portfolio) throw new Error('settings.json missing portfolio');
   if (!cfg?.benchmark?.provider) throw new Error('settings.json missing nsdk.benchmark.provider');
   if (cfg.benchmark.provider === 'eastmoney' && !cfg.benchmark.secid) throw new Error('settings.json missing nsdk.benchmark.secid');
-  if (cfg.benchmark.provider === 'stooq' && !cfg.benchmark.symbol) throw new Error('settings.json missing nsdk.benchmark.symbol');
+  if ((cfg.benchmark.provider === 'stooq' || cfg.benchmark.provider === 'finnhub') && !cfg.benchmark.symbol) {
+    throw new Error('settings.json missing nsdk.benchmark.symbol');
+  }
+  if (cfg.benchmark.provider === 'finnhub' && !cfg.finnhubApiKey) {
+    throw new Error('Finnhub API key missing: set environment variable FINNHUB_API_KEY or nsdk.finnhub.apiKey in settings.json');
+  }
   if (cfg.pushEnabled) {
     const sendKey = cfg?.serverChan?.sendKey;
     if (!sendKey) throw new Error('settings.json missing nsdk.serverChan.sendKey');

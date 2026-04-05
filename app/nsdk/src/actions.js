@@ -12,6 +12,7 @@
  */
 const { getLatestPrice, getFiveMonthHigh } = require('./market/eastmoney');
 const { getLatestDaily, getFiveMonthHighDaily } = require('./market/stooq');
+const { getLatestDaily: getLatestDailyFinnhub, getFiveMonthHighDaily: getFiveMonthHighDailyFinnhub } = require('./market/finnhub');
 const { computeTargets, computeDrawdown, buildTierTable, nextTierToTrigger } = require('./plan');
 const { logEvent } = require('./logger');
 const { push } = require('./push');
@@ -30,7 +31,7 @@ const fmtPercent = (n) => {
 
 const resolveBenchmarkLabel = (cfg) => {
   const provider = cfg?.benchmark?.provider;
-  if (provider === 'stooq') return cfg?.benchmark?.name || cfg?.benchmark?.symbol || 'STOOQ';
+  if (provider === 'stooq' || provider === 'finnhub') return cfg?.benchmark?.name || cfg?.benchmark?.symbol || 'Benchmark';
   if (provider === 'eastmoney') return cfg?.benchmark?.name || cfg?.fund?.name || 'Eastmoney';
   return cfg?.benchmark?.name || 'Benchmark';
 };
@@ -50,6 +51,32 @@ const fetchBenchmarkMarket = async (cfg) => {
       pct: latest.pct,
       high5m: high.maxHigh,
       high5mDay: high.maxDay,
+    };
+  }
+
+  if (provider === 'finnhub') {
+    const token = cfg.finnhubApiKey;
+    const [latest, high] = await Promise.all([
+      getLatestDailyFinnhub(token, cfg.benchmark.symbol),
+      getFiveMonthHighDailyFinnhub(token, cfg.benchmark.symbol),
+    ]);
+    // QQQ 与 NDX 指数有稳定比例关系（~41.1），用于把 QQQ 的美元价换算成指数级显示
+    const QQQ_NDX_RATIO = 41.1016;
+    const rawPrice = latest.close;
+    const rawHigh = high.maxHigh;
+    const displayPrice = Math.round(rawPrice * QQQ_NDX_RATIO);
+    const displayHigh = Math.round(rawHigh * QQQ_NDX_RATIO);
+    return {
+      provider,
+      code: latest.symbol,
+      name: resolveBenchmarkLabel(cfg),
+      price: displayPrice,
+      pct: latest.pct,
+      high5m: displayHigh,
+      high5mDay: high.maxDay,
+      // 保留原始 QQQ 数据供调试
+      _rawPrice: rawPrice,
+      _rawHigh: rawHigh,
     };
   }
 

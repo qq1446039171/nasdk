@@ -40,10 +40,13 @@
       "name": "纳指ETF"
     },
     "benchmark": {
-      "provider": "stooq",
+      "provider": "finnhub",
       "secid": "1.513100",
       "symbol": "NDX",
       "name": "纳指100（NDX）"
+    },
+    "finnhub": {
+      "apiKey": ""
     },
     "timezone": "Asia/Shanghai",
     "logDir": "D:/log-nsdk",

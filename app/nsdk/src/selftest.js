@@ -1,6 +1,7 @@
 const assert = require('assert');
 const { buildTierTable, nextTierToTrigger } = require('./plan');
 const { _parseDailyCsv, _normalizeSymbol } = require('./market/stooq');
+const { _resolveFinnhubInstrument, _displayBenchmarkCode } = require('./market/finnhub');
 
 const main = () => {
   const levels = [10, 15, 20, 25];
@@ -24,6 +25,12 @@ const main = () => {
   assert.strictEqual(_normalizeSymbol('QQQ'), 'QQQ.US');
   assert.strictEqual(_normalizeSymbol('IXIC'), '^NDQ');
   assert.strictEqual(_normalizeSymbol('NDX'), '^NDX');
+
+  assert.strictEqual(_resolveFinnhubInstrument('NDX'), 'QQQ');
+  assert.strictEqual(_resolveFinnhubInstrument('^NDX'), 'QQQ');
+  assert.strictEqual(_resolveFinnhubInstrument('QQQ'), 'QQQ');
+  assert.strictEqual(_displayBenchmarkCode('NDX'), '^NDX');
+  assert.strictEqual(_displayBenchmarkCode('QQQ'), 'QQQ.US');
 
   const csvComma = [
     'Date,Open,High,Low,Close,Volume',

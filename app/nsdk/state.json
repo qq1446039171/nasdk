@@ -125,22 +125,24 @@
   },
   "lastMarket": {
     "benchmark": {
-      "provider": "stooq",
+      "provider": "finnhub",
       "code": "^NDX",
       "name": "纳指100（NDX）",
-      "price": 23132.77,
-      "pct": -1.9257226123384166,
-      "high5m": 26182.1,
+      "price": 24044,
+      "pct": 0.1147,
+      "high5m": 26182,
       "high5mDay": "2025-10-29",
-      "drawdownPct": 11.65
+      "_rawPrice": 584.98,
+      "_rawHigh": 637.01,
+      "drawdownPct": 8.17
     },
     "buy": {
       "code": "513100",
       "name": "纳指ETF国泰",
-      "price": 1.708,
-      "pct": -0.47
+      "price": 1.731,
+      "pct": 0.58
     },
-    "at": "2026-03-28T17:01:52.212Z"
+    "at": "2026-04-05T13:21:51.674Z"
   },
   "freeze": {
     "active": false,

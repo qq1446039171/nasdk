@@ -233,10 +233,10 @@ export const schema = {
           key: "nsdk.benchmark.provider",
           nameZh: "回撤基准来源",
           nameEn: "Benchmark Provider",
-          description: "eastmoney=用基金净值；stooq=用指数/美股ETF（日线）。",
+          description: "eastmoney=东财；stooq=Stooq 日线（易失效）；finnhub=Finnhub（免费档用 quote+52 周高，见文档）。",
           type: "string",
           default: "eastmoney",
-          validation: { required: true, options: ["eastmoney", "stooq"] }
+          validation: { required: true, options: ["eastmoney", "stooq", "finnhub"] }
         },
         {
           key: "nsdk.benchmark.secid",
@@ -251,10 +251,20 @@ export const schema = {
           key: "nsdk.benchmark.symbol",
           nameZh: "回撤基准 Stooq Symbol",
           nameEn: "Benchmark Stooq Symbol",
-          description: "provider=stooq 时使用，例如 QQQ / QQQ.US / IXIC。",
+          description: "provider=stooq 或 finnhub 时使用，例如 NDX / QQQ。finnhub 免费档下 NDX 实际用 QQQ 拉数。",
           type: "string",
           default: "QQQ",
           validation: { required: false, maxLength: 64 }
+        },
+        {
+          key: "nsdk.finnhub.apiKey",
+          nameZh: "Finnhub API Key",
+          nameEn: "Finnhub API Key",
+          description: "provider=finnhub 时必填；也可用环境变量 FINNHUB_API_KEY（优先）。",
+          type: "string",
+          default: "",
+          props: { type: "password", showPassword: true },
+          validation: { required: false, maxLength: 128 }
         },
         {
           key: "nsdk.benchmark.name",
