@@ -13,6 +13,7 @@
 const { getLatestPrice, getFiveMonthHigh } = require('./market/eastmoney');
 const { getLatestDaily, getFiveMonthHighDaily } = require('./market/stooq');
 const { getLatestDaily: getLatestDailyFinnhub, getFiveMonthHighDaily: getFiveMonthHighDailyFinnhub } = require('./market/finnhub');
+const { getVixLast7 } = require('./market/vix');
 const { computeTargets, computeDrawdown, buildTierTable, nextTierToTrigger } = require('./plan');
 const { logEvent } = require('./logger');
 const { push } = require('./push');
@@ -186,9 +187,18 @@ const pushTierAlert = async (cfg, state, benchmark, buy, tier) => {
   const row = state.drawdownRound?.table?.find(x => x.level === tier);
   state.drawdownRound.alerted[String(tier)] = true;
 
+  let vixLine = 'VIX恐慌指数（近7日）：N/A';
+  try {
+    const vixData = await getVixLast7();
+    if (vixData && vixData.length > 0) {
+      vixLine = 'VIX恐慌指数（近7日）：' + vixData.map(r => r.close).join('  ');
+    }
+  } catch { /* silent */ }
+
   const title = `回撤基准 ${benchmark.name} ≥-${tier}%：执行一次性买入`;
   const body = [
     `回撤基准：${benchmark.name}（${benchmark.code}）`,
+    vixLine,
     `当前：${benchmark.price}，近5月高点：${benchmark.high5m}（${benchmark.high5mDay}）`,
     `回撤：-${benchmark.drawdownPct}%`,
     `买入工具：${buy.name}（${buy.code}）`,
@@ -297,6 +307,7 @@ const marketCheck = async (cfg, state) => {
 
   let buyLatest = null;
   let benchmarkMarket = null;
+  let vixData = null;
   const errors = [];
 
   try {
@@ -309,6 +320,12 @@ const marketCheck = async (cfg, state) => {
     benchmarkMarket = await fetchBenchmarkMarket(cfg);
   } catch (err) {
     errors.push(String(err?.message || err));
+  }
+
+  try {
+    vixData = await getVixLast7();
+  } catch (err) {
+    // VIX 获取失败不影响主流程，只在 body 里显示 N/A
   }
 
   if (!benchmarkMarket) {
@@ -347,8 +364,15 @@ const marketCheck = async (cfg, state) => {
   const title = `每日:回撤-${benchmark.drawdownPct}%`;
   const round = state.drawdownRound;
   const next = round ? findNextLevel(round) : null;
+  const vixLine = (() => {
+    if (!vixData || vixData.length === 0) return 'VIX恐慌指数（近7日）：N/A';
+    const parts = vixData.map(r => r.close);
+    return `VIX恐慌指数（近7日）：${parts.join('  ')}`;
+  })();
+
   const body = [
     `回撤基准：${benchmark.name}（${benchmark.code}）`,
+    vixLine,
     `当前：${benchmark.price}（${benchmark.pct ?? 'N/A'}%）`,
     `近5月高点：${benchmark.high5m}（${benchmark.high5mDay}）`,
     `回撤：-${benchmark.drawdownPct}%`,
