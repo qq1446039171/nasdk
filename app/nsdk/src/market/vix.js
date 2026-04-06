@@ -46,14 +46,36 @@ const getLast7Days = () => {
  * @returns {Promise<Array<{date: string, close: number}>>}
  */
 const getVixLast7 = async () => {
+  // 获取最近有数据的可用日期（周末/节假日 FRED 可能无当天数据）
+  const resolveEndDate = async (url) => {
+    const text = await getJson(url);
+    const lines = String(text).split(/\r?\n/).filter(Boolean);
+    if (lines.length <= 1) return null; // 当天无数据
+    return lines[lines.length - 1].split(',')[0].trim();
+  };
+
   const today = new Date().toISOString().slice(0, 10);
+
+  // 先尝试当天
+  let dataUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&vintage_date=${today}&cosd=1970-01-01&coed=${today}`;
+  let lastAvailableDate = await resolveEndDate(dataUrl);
+
+  // 当天无数据则改为到昨天
+  if (!lastAvailableDate) {
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yest = d.toISOString().slice(0, 10);
+    lastAvailableDate = yest;
+    dataUrl = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&vintage_date=${today}&cosd=1970-01-01&coed=${yest}`;
+  }
+
   const startDate = (() => {
     const d = new Date();
     d.setDate(d.getDate() - 10);
     return d.toISOString().slice(0, 10);
   })();
 
-  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&vintage_date=${today}&cosd=${startDate}&coed=${today}`;
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=VIXCLS&vintage_date=${today}&cosd=${startDate}&coed=${lastAvailableDate}`;
   const text = await getJson(url);
 
   const lines = String(text).split(/\r?\n/).filter(Boolean);
