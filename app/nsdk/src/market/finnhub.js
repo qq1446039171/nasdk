@@ -3,10 +3,10 @@
  *
  * 免费档无法使用 /stock/candle（会 403），因此：
  * - 最新价、日涨跌幅：GET /api/v1/quote
- * - 高点锚点：GET /api/v1/stock/metric 的 52WeekHigh / 52WeekHighDate
+ * - 高点锚点：GET /api/v1/stock/metric 的 52WeekHigh / 52WeekHighDate（近1年高点）
  *
  * 与原先 Stooq 路径的差异（行为仍按同一套回撤公式计算）：
- * - 高点为「52 周最高」，不是「最近约 150 根日 K 的最高价」；多数时候接近，极端行情下可能不同。
+ * - 高点为「52 周最高」，与“近1年高点”口径基本一致。
  * - 配置为纳指指数（NDX、^NDX 等）时，免费档无可用指数 candle/metric，实际请求 **QQQ**（纳指100 ETF）作为代理，推送里
  *   `code` 仍与 Stooq 约定一致（如 ^NDX），与旧版展示对齐。
  *
@@ -79,7 +79,7 @@ const getLatestDaily = async (token, symbol) => {
   };
 };
 
-const getFiveMonthHighDaily = async (token, symbol) => {
+const getOneYearHighDaily = async (token, symbol) => {
   if (!token || !String(token).trim()) throw new Error('Finnhub API key missing');
   const inst = resolveFinnhubInstrument(symbol);
   const url = `https://finnhub.io/api/v1/stock/metric?symbol=${encodeURIComponent(inst)}&metric=all&token=${encodeURIComponent(token)}`;
@@ -97,7 +97,7 @@ const getFiveMonthHighDaily = async (token, symbol) => {
 
 module.exports = {
   getLatestDaily,
-  getFiveMonthHighDaily,
+  getOneYearHighDaily,
   _resolveFinnhubInstrument: resolveFinnhubInstrument,
   _displayBenchmarkCode: displayBenchmarkCode,
 };

@@ -79,13 +79,13 @@ const getLatestDaily = async (symbol) => {
   };
 };
 
-const getFiveMonthHighDaily = async (symbol) => {
+const getOneYearHighDaily = async (symbol) => {
   const sym = normalizeSymbol(symbol);
-  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=d&c=200`;
+  const url = `https://stooq.com/q/d/l/?s=${encodeURIComponent(sym)}&i=d&c=300`;
   const text = await getText(url);
   const rows = parseDailyCsv(text);
   if (rows.length === 0) throw new Error('No data');
-  const tail = rows.slice(-150);
+  const tail = rows.slice(-260);
   let maxHigh = -Infinity;
   let maxDay = null;
   for (const r of tail) {
@@ -100,7 +100,7 @@ const getFiveMonthHighDaily = async (symbol) => {
 
 module.exports = {
   getLatestDaily,
-  getFiveMonthHighDaily,
+  getOneYearHighDaily,
   _parseDailyCsv: parseDailyCsv,
   _normalizeSymbol: normalizeSymbol,
 };

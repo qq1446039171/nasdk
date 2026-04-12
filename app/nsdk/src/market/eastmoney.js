@@ -3,7 +3,7 @@
  *
  * 本模块只负责两件事：
  * - 获取 513100 最新价（用于 current）
- * - 获取近 150 个交易日 K 线里的最高价（作为“近5个月高点锚点”）
+ * - 获取近 1 年交易日 K 线里的最高价（作为“近1年高点锚点”）
  *
  * 备注：
  * - 部分字段会以 “价格*1000” 或 “涨跌幅*100” 的形式返回，因此需要 normalize
@@ -66,11 +66,11 @@ const getLatestPrice = async (secid) => {
   };
 };
 
-// K线接口：klt=101（日K），lmt=150（最近 150 条），取每条的 high 列做最大值
-const getFiveMonthHigh = async (secid) => {
+// K线接口：klt=101（日K），lmt=260（最近约 1 年交易日），取每条的 high 列做最大值
+const getOneYearHigh = async (secid) => {
   const fields1 = 'f1,f2,f3,f4,f5,f6';
   const fields2 = 'f51,f52,f53,f54,f55,f56,f57,f58,f59,f60,f61';
-  const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields1=${fields1}&fields2=${fields2}&klt=101&fqt=1&beg=0&end=20500101&lmt=150`;
+  const url = `https://push2his.eastmoney.com/api/qt/stock/kline/get?ut=fa5fd1943c7b386f172d6893dbfba10b&secid=${encodeURIComponent(secid)}&fields1=${fields1}&fields2=${fields2}&klt=101&fqt=1&beg=0&end=20500101&lmt=260`;
   const json = await getJson(url);
   const klines = json?.data?.klines;
   if (!Array.isArray(klines) || klines.length === 0) {
@@ -93,6 +93,6 @@ const getFiveMonthHigh = async (secid) => {
 
 module.exports = {
   getLatestPrice,
-  getFiveMonthHigh,
+  getOneYearHigh,
 };
 

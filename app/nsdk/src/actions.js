@@ -10,9 +10,9 @@
  * - 本程序只负责“提醒 + 记录 + 防重复”，不直接下单
  * - 你执行完买入后，用配置器或 cli 命令确认（把 executed 标记写入 Config/settings.json），保证“每档只触发一次”
  */
-const { getLatestPrice, getFiveMonthHigh } = require('./market/eastmoney');
-const { getLatestDaily, getFiveMonthHighDaily } = require('./market/stooq');
-const { getLatestDaily: getLatestDailyFinnhub, getFiveMonthHighDaily: getFiveMonthHighDailyFinnhub } = require('./market/finnhub');
+const { getLatestPrice, getOneYearHigh } = require('./market/eastmoney');
+const { getLatestDaily, getOneYearHighDaily } = require('./market/stooq');
+const { getLatestDaily: getLatestDailyFinnhub, getOneYearHighDaily: getOneYearHighDailyFinnhub } = require('./market/finnhub');
 const { getVixLast7 } = require('./market/vix');
 const { computeTargets, computeDrawdown, buildTierTable, nextTierToTrigger } = require('./plan');
 const { logEvent } = require('./logger');
@@ -42,7 +42,7 @@ const fetchBenchmarkMarket = async (cfg) => {
   if (provider === 'stooq') {
     const [latest, high] = await Promise.all([
       getLatestDaily(cfg.benchmark.symbol),
-      getFiveMonthHighDaily(cfg.benchmark.symbol),
+      getOneYearHighDaily(cfg.benchmark.symbol),
     ]);
     return {
       provider,
@@ -50,8 +50,8 @@ const fetchBenchmarkMarket = async (cfg) => {
       name: resolveBenchmarkLabel(cfg),
       price: latest.close,
       pct: latest.pct,
-      high5m: high.maxHigh,
-      high5mDay: high.maxDay,
+      high1y: high.maxHigh,
+      high1yDay: high.maxDay,
     };
   }
 
@@ -59,7 +59,7 @@ const fetchBenchmarkMarket = async (cfg) => {
     const token = cfg.finnhubApiKey;
     const [latest, high] = await Promise.all([
       getLatestDailyFinnhub(token, cfg.benchmark.symbol),
-      getFiveMonthHighDailyFinnhub(token, cfg.benchmark.symbol),
+      getOneYearHighDailyFinnhub(token, cfg.benchmark.symbol),
     ]);
     // QQQ 与 NDX 指数有稳定比例关系（~41.1），用于把 QQQ 的美元价换算成指数级显示
     const QQQ_NDX_RATIO = 41.1016;
@@ -73,8 +73,8 @@ const fetchBenchmarkMarket = async (cfg) => {
       name: resolveBenchmarkLabel(cfg),
       price: displayPrice,
       pct: latest.pct,
-      high5m: displayHigh,
-      high5mDay: high.maxDay,
+      high1y: displayHigh,
+      high1yDay: high.maxDay,
       // 保留原始 QQQ 数据供调试
       _rawPrice: rawPrice,
       _rawHigh: rawHigh,
@@ -83,7 +83,7 @@ const fetchBenchmarkMarket = async (cfg) => {
 
   const [latest, high] = await Promise.all([
     getLatestPrice(cfg.benchmark.secid),
-    getFiveMonthHigh(cfg.benchmark.secid),
+    getOneYearHigh(cfg.benchmark.secid),
   ]);
   return {
     provider: 'eastmoney',
@@ -91,8 +91,8 @@ const fetchBenchmarkMarket = async (cfg) => {
     name: resolveBenchmarkLabel(cfg),
     price: latest.price,
     pct: latest.pct,
-    high5m: high.maxHigh,
-    high5mDay: high.maxDay,
+    high1y: high.maxHigh,
+    high1yDay: high.maxDay,
   };
 };
 
@@ -168,7 +168,7 @@ const getMarketSnapshot = async (cfg) => {
     throw new Error(msg);
   }
 
-  const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high5m });
+  const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high1y });
   const buy = {
     code: cfg.fund.code,
     name: buyLatest?.name || cfg.fund.name,
@@ -199,7 +199,7 @@ const pushTierAlert = async (cfg, state, benchmark, buy, tier) => {
   const body = [
     `回撤基准：${benchmark.name}（${benchmark.code}）`,
     vixLine,
-    `当前：${benchmark.price}，近5月高点：${benchmark.high5m}（${benchmark.high5mDay}）`,
+    `当前：${benchmark.price}，近1年高点：${benchmark.high1y}（${benchmark.high1yDay}）`,
     `回撤：-${benchmark.drawdownPct}%`,
     `买入工具：${buy.name}（${buy.code}）`,
     `本轮回撤快照储备金：${fmtCny(state.drawdownRound.snapshotReserveCny)} 元`,
@@ -333,7 +333,7 @@ const marketCheck = async (cfg, state) => {
     return false;
   }
 
-  const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high5m });
+  const drawdownPct = computeDrawdown({ current: benchmarkMarket.price, high: benchmarkMarket.high1y });
   const buy = {
     code: cfg.fund.code,
     name: buyLatest?.name || cfg.fund.name,
@@ -374,7 +374,7 @@ const marketCheck = async (cfg, state) => {
     `回撤基准：${benchmark.name}（${benchmark.code}）`,
     vixLine,
     `当前：${benchmark.price}（${benchmark.pct ?? 'N/A'}%）`,
-    `近5月高点：${benchmark.high5m}（${benchmark.high5mDay}）`,
+    `近1年高点：${benchmark.high1y}（${benchmark.high1yDay}）`,
     `回撤：-${benchmark.drawdownPct}%`,
     `买入工具：${buy.name}（${buy.code}） 当前 ${buy.price ?? 'N/A'}（${buy.pct ?? 'N/A'}%）`,
     `纳指已投资金额：¥${fmtCny(invested)}（${fmtPercent(investedPercent)}%）· 还能投资 ${fmtPercent(remainingInvestPercent)}% / ¥${fmtCny(remainingInvestAmount)}`,
