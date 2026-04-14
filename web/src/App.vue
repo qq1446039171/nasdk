@@ -223,7 +223,7 @@
             <div class="adjustLabel">新增纳指投资金额</div>
             <el-input-number
               v-model="addNasdaqInvestDelta"
-              :min="0"
+              :min="-nasdaqInvestedAmount"
               :step="1000"
               :precision="2"
               controls-position="right"
@@ -490,7 +490,7 @@ const previewNasdaqInvestedAmount = computed(() => {
   return next;
 });
 
-const canApplyAdjust = computed(() => (Number(addDepositDelta.value) || 0) > 0 || (Number(addNasdaqInvestDelta.value) || 0) > 0);
+const canApplyAdjust = computed(() => (Number(addDepositDelta.value) || 0) !== 0 || (Number(addNasdaqInvestDelta.value) || 0) !== 0);
 const canDispatchGithubSave = computed(() => {
   return Boolean(
     settings.value &&
