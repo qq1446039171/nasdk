@@ -1,7 +1,7 @@
 {
   "funds": {
     "depositAmount": 200000,
-    "nasdaqExposureLimitPercent": 70
+    "nasdaqExposureLimitPercent": 71
   },
   "allocation": {
     "fixedAllocationEnabled": true,
