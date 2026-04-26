@@ -1,17 +1,20 @@
 {
   "funds": {
     "depositAmount": 200000,
-    "nasdaqExposureLimitPercent": 60
+    "nasdaqExposureLimitPercent": 70
   },
   "allocation": {
     "fixedAllocationEnabled": true,
     "boughtTargetPercent": 40,
-    "reserveCashTargetPercent": 20
+    "reserveCashTargetPercent": 20,
+    "otherCashTargetPercent": 30,
+    "monthlyCashflowCny": 4000
   },
   "portfolio": {
     "investedNasdaqCny": 64549,
     "reserveCashNasdaqCny": 40000,
     "reserveUsedNasdaqCny": 0,
+    "otherCashCny": 95451,
     "fearOfMissingOut": false
   },
   "drawdown": {
@@ -28,10 +31,6 @@
     "baselineReserveAmount": 0,
     "lockedAt": "",
     "cycleId": ""
-  },
-  "meta": {
-    "configVersion": 9,
-    "lastSavedAt": "2026-02-02T06:12:49.995Z"
   },
   "nsdk": {
     "fund": {
